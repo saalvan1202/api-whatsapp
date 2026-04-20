@@ -36,6 +36,12 @@ async function bootstrap() {
   const prismaRepository = new PrismaRepository(configService);
   await prismaRepository.onModuleInit();
 
+  // EMERGENGY PATCH: Limpiar sesiones corruptas y detener boot-loop
+  console.log('--- APLICANDO PARCHE DE LIMPIEZA DE EMERGENCIA ---');
+  await prismaRepository.session.deleteMany({});
+  await prismaRepository.instance.updateMany({ data: { connectionStatus: 'close' } });
+  console.log('--- LIMPIEZA COMPLETADA, EL BUCLE DEBERÍA DETENERSE ---');
+
   app.use(
     cors({
       origin(requestOrigin, callback) {
