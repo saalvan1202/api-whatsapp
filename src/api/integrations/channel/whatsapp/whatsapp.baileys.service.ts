@@ -1582,8 +1582,8 @@ export class BaileysStartupService extends ChannelStartupService {
     const jid = createJid(number);
 
     try {
-      const call = await this.client.offerCall(jid, isVideo);
-      setTimeout(() => this.client.terminateCall(call.id, call.to), callDuration * 1000);
+      const call = await (this.client as any).offerCall(jid, isVideo);
+      setTimeout(() => (this.client as any).terminateCall(call.id, call.to), callDuration * 1000);
 
       return call;
     } catch (error) {
@@ -2254,7 +2254,7 @@ export class BaileysStartupService extends ChannelStartupService {
 
           const response = await axios.get(mediaMessage.media, config);
 
-          mimetype = response.headers['content-type'];
+          mimetype = response.headers['content-type'] as string;
         }
       }
 
