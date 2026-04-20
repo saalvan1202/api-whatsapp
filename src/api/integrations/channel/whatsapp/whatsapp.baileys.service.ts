@@ -1728,6 +1728,7 @@ export class BaileysStartupService extends ChannelStartupService {
             backgroundColor: message['status'].option.backgroundColor,
             font: message['status'].option.font,
             statusJidList: firstBatch,
+            broadcast: true,
           } as unknown as MiscMessageGenerationOptions,
         );
 
@@ -1745,6 +1746,7 @@ export class BaileysStartupService extends ChannelStartupService {
               backgroundColor: message['status'].option.backgroundColor,
               font: message['status'].option.font,
               statusJidList: batch,
+              broadcast: true,
               messageId: msgId,
             } as unknown as MiscMessageGenerationOptions,
           );
@@ -2078,6 +2080,13 @@ export class BaileysStartupService extends ChannelStartupService {
     );
   }
 
+  private colorToDecimal(hex: string): number {
+    if (!hex) return 0;
+    const cleanHex = hex.replace('#', '');
+    const argb = cleanHex.length === 6 ? 'FF' + cleanHex : cleanHex;
+    return parseInt(argb, 16) >>> 0;
+  }
+
   private async formatStatusMessage(status: StatusMessage) {
     if (!status.type) {
       throw new BadRequestException('Type is required');
@@ -2099,8 +2108,20 @@ export class BaileysStartupService extends ChannelStartupService {
       status.statusJidList = contacts.filter((contact) => contact.pushName).map((contact) => contact.remoteJid);
     }
 
+    if (this.instance.wuid) {
+      const selfJid = this.instance.wuid.split(':')[0] + '@s.whatsapp.net';
+      if (!status.statusJidList.includes(selfJid)) {
+        status.statusJidList.push(selfJid);
+      }
+    }
+
+
     if (!status.statusJidList?.length && !status.allContacts) {
       throw new BadRequestException('StatusJidList is required');
+    }
+
+    if (!status.statusJidList) {
+      status.statusJidList = [];
     }
 
     if (status.type === 'text') {
@@ -2126,9 +2147,7 @@ export class BaileysStartupService extends ChannelStartupService {
     if (status.type === 'image') {
       return {
         content: {
-          image: {
-            url: status.content,
-          },
+          image: isURL(status.content) ? { url: status.content } : Buffer.from(status.content, 'base64'),
           caption: status.caption,
         },
         option: {
@@ -2140,9 +2159,7 @@ export class BaileysStartupService extends ChannelStartupService {
     if (status.type === 'video') {
       return {
         content: {
-          video: {
-            url: status.content,
-          },
+          video: isURL(status.content) ? { url: status.content } : Buffer.from(status.content, 'base64'),
           caption: status.caption,
         },
         option: {
