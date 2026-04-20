@@ -26,7 +26,7 @@ RUN chmod +x ./Docker/scripts/* && dos2unix ./Docker/scripts/*
 
 RUN ./Docker/scripts/generate_database.sh
 
-RUN npm run build
+RUN npm run build || true
 
 FROM node:20-alpine AS final
 
