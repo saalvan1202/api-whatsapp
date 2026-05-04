@@ -70,7 +70,9 @@ export class MessageRouter extends RouterBroker {
           ClassRef: SendMediaDto,
           execute: (instance) => sendMessageController.sendMedia(instance, bodyData, req.file as any),
         });
-
+        if (response.status == 'PENDING') {
+          return res.status(HttpStatus.CREATED).json({ status: 200, mensaje: "Enviado Correctamente", success: true });
+        }
         return res.status(HttpStatus.CREATED).json(response);
       })
       .post(this.routerPath('sendPtv'), ...guards, upload.single('file'), async (req, res) => {
